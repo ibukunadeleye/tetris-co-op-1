@@ -1,3 +1,3 @@
-package GameServer
+package gameserver
 
 //implementation for game server goes here
