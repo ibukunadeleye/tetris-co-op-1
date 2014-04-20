@@ -1,6 +1,3 @@
-tetris_coop
-===========
-
 Made by Minh Le and Ibukun Adeleye for 15-440 S14 Project 3 
 
 #Description
