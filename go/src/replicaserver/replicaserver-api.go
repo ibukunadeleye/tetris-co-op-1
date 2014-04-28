@@ -1,6 +1,6 @@
 package replicaserver
 
-import "github.com/cmu440/tribbler/rpc/replicarpc"
+import "rpc/replicarpc"
 
 // ReplicaServer defines the set of methods that can be invoked
 //remotely via RPCs.
