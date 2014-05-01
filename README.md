@@ -30,4 +30,4 @@ $GOPATH/bin/grunner -game_port 8060 -central_port 8085 -id 1
 
 $GOPATH/bin/runner -N=3 -master="localhost:8085" -port=1234 -f=0
 
-
+In order to test a replica server you can set the -f flag to a non 0 number and it will kill that server a number of times during the whole test.
