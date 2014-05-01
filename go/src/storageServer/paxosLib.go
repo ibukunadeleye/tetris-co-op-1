@@ -1,8 +1,5 @@
 package storageServer
 
-import (
-	"fmt"
-)
 
 type PreparePkg struct{
 	N int
