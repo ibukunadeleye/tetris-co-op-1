@@ -1,62 +1,34 @@
 package replicarpc
 
-import "net/rpc"
-//defines the RPC methods that can be called on a replica server
+type RemoteStorageServer interface {
+	Get(*GetArgs, *GetReply) error
 
-type AddServersArgs struct{
-	ServerMap map [int] *rpc.Client
-}
-type AddServersReply struct{
+	GetList(*GetArgs, *GetListReply) error
 
-}
+	Put(*PutArgs, *PutReply) error
 
-type PrepareArgs struct{
-	N float64
-	CS int
-	HostPort string
-}
+	AppendToList(*PutArgs, *PutReply) error
 
-type AcceptArgs struct{
-	N float64
-	V []byte
-	CS int	
-	HostPort string
+	RemoveFromList(*PutArgs, *PutReply) error
+	
+	AddServers(*AddServersArgs, *AddServersReply) error
+	
+	Prepare(*PrepareArgs, *Reply) error
+	
+	Accept(*AcceptArgs, *Reply) error
+	
+	Commit(*CommitVal, *Reply)error
+	
 }
 
-type CommitArgs struct{
-	N float64
-	V []byte
-	hostport string
+type ReplicaServer struct {
+	// Embed all methods into the struct. See the Effective Go section about
+	// embedding for more details: golang.org/doc/effective_go.html#embedding
+	RemoteStorageServer
 }
 
-type Reply struct{
-	OK bool
-	Value []byte
-	N float64
-	CS int
-	Committed bool
-}
-
-type CommitVal struct{
-	N float64
-	V []byte
-	CS int
-	Committed bool
-}
-
-type GetArgs struct{
-}
-
-type GetReply struct{
-	V []byte
-}
-
-type GetListReply struct{
-}
-
-type PutArgs struct{
-	V []byte
-}
-
-type PutReply struct{
+// Wrap wraps s in a type-safe wrapper struct to ensure that only the desired
+// StorageServer methods are exported to receive RPCs.
+func Wrap(s RemoteStorageServer) RemoteStorageServer {
+	return &ReplicaServer{s}
 }

@@ -28,4 +28,15 @@ type ReplicaServer interface {
 	// the specified value from its list. If the specified value is not already
 	//contained in the list, it should reply with status ItemNotFound.
 	RemoveFromList(*replicarpc.PutArgs, *replicarpc.PutReply) error
+	
+	//This function is used to inform the replica of all the available servers in 
+	//the paxos routine
+	AddServers(*replicarpc.AddServersArgs,*replicarpc.AddServersReply) error
+	
+	Prepare(*replicarpc.PrepareArgs, *replicarpc.Reply) error
+	
+	Accept(*replicarpc.AcceptArgs, *replicarpc.Reply) error
+	
+	Commit(*replicarpc.CommitVal, *replicarpc.Reply)error
+	
 }
