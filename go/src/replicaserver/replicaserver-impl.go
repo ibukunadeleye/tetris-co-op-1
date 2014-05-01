@@ -43,7 +43,7 @@ type replicaServer struct {
 // For now, the address of all replicaservers are "localhost".
 // This function should return only once all members have joined the quorum
 // and should return a non-nil error if the replicaserver could not be started.
-func NewReplicaServer(masterServerHostPort string, port, numNodes int) (ReplicaServer, error) {
+func NewReplicaServer(masterServerHostPort string, port, numNodes int, fail bool) (ReplicaServer, error) {
 	fmt.Println("starting up replicaServer port:", port)
 	//new replicaServer
 	rs := &replicaServer{
@@ -60,8 +60,7 @@ func NewReplicaServer(masterServerHostPort string, port, numNodes int) (ReplicaS
 		httpHandlerMap:  make(map[int]*rpc.Client),
 		inChan:          make(chan []byte),
 		outChan:         make(chan []byte),
-		testNodeDies_BC: true,
-		testNodeDies_AC: false,
+		testNodeDies_BC: fail,
 		FailureNode:     2,
 	}
 

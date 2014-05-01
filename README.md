@@ -17,8 +17,7 @@ One storage server will store all the game state and associated data, but it wil
 
 ##Usage
 
-All servers should be started on the GHC linux cluster at unix5.andrew.cmu.edu since this is the address that the clients will connect to. The following commands assume that you have executed the commands 'go install crunner' and 'go install grunner'. 
-
+All servers should be started on the GHC linux cluster at unix5.andrew.cmu.edu since this is the address that the clients will connect to. The following commands assume that you have executed the commands 'go install crunner' ; 'go install grunner' ; ' go install main/tests/ptest' ; 'go build replicaserver' ; 'go install main/runner/' . 
 To start a central server: 
 
 $GOPATH/bin/crunner -port 8085 -numGS 1 -numNodes 3 
@@ -26,5 +25,9 @@ $GOPATH/bin/crunner -port 8085 -numGS 1 -numNodes 3
 To start a game server: 
 
 $GOPATH/bin/grunner -game_port 8060 -central_port 8085 -id 1
+
+*you must initially start up central server and then you can start up replicas
+
+$GOPATH/bin/runner -N=3 -master="localhost:8085" -port=1234 -f=0
 
 
