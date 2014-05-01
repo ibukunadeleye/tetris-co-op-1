@@ -1,7 +1,6 @@
 package replicaserver
 
 import (
-	"centralserver"
 	"container/list"
 	"errors"
 	"fmt"
