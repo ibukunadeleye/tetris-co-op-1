@@ -59,29 +59,15 @@ func (gs *gameServer) Handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NewGameServer(myHostPort string, centralHostPort string, id int) (GameServer, error) {
+func NewGameServer(myPort string, centralPort string, id int) (GameServer, error) {
 	fmt.Printf("creating new game server #%d\n", id)
 	//register rpc handler for game server
-	newGameServer := &gameServer{ID: id, Hostport: myHostPort}
-	/*
-		listener, err := net.Listen("tcp", myHostPort)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-			err = rpc.RegisterName("GameServer", gamerpc.Wrap(newGameServer))
-			if err != nil {
-				fmt.Println(err)
-				return nil, err
-			}
-
-			rpc.HandleHTTP()
-			go http.Serve(listener, nil)
-	*/
-	//register game server with central server
+	newGameServer := &gameServer{ID: id, Hostport: "localhost:" + myPort}
 
 	http.HandleFunc("/", newGameServer.Handler)
-	go http.ListenAndServe(myHostPort, nil)
+	go http.ListenAndServe(":"+myPort, nil)
+
+	centralHostPort := "localhost:" + centralPort
 
 	centralServer, err := rpc.DialHTTP("tcp", centralHostPort)
 	for err != nil {
@@ -91,8 +77,8 @@ func NewGameServer(myHostPort string, centralHostPort string, id int) (GameServe
 	}
 
 	args := &centralrpc.RegisterGSArgs{
-		HostPort: myHostPort,
-		ID:       id}
+		Port: myPort,
+		ID:   id}
 
 	reply := new(centralrpc.RegisterGSReply)
 
