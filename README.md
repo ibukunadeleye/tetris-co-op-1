@@ -14,3 +14,17 @@ The implementation has three major components: the game clients, the game server
 
 One storage server will store all the game state and associated data, but it will be replicated for fault tolerance using a 5-member Multi-PAXOS. A centralized data server will handle the membership for multi-PAXOS. If we have time, we will synchronize global shared resources with Lamport’s Distributed Mutual Exclusion.
 
+
+##Usage
+
+All servers should be started on the GHC linux cluster at unix5.andrew.cmu.edu since this is the address that the clients will connect to. The following commands assume that you have executed the commands 'go install crunner' and 'go install grunner'. 
+
+To start a central server: 
+
+$GOPATH/bin/crunner -port 8085 -numGS 1 -numNodes 3 
+
+To start a game server: 
+
+$GOPATH/bin/grunner -game_port 8060 -central_port 8085 -id 1
+
+

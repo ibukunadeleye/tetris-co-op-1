@@ -67,14 +67,14 @@ func initStorageTester(server, myhostport string) (*storageTester, error) {
 func (st *storageTester) Get() (*replicarpc.GetReply, error) {
 	args := &replicarpc.GetArgs{}
 	var reply replicarpc.GetReply
-	err := st.srv.Call("StarterServer.Get", args, &reply)
+	err := st.srv.Call("CentralServer.Get", args, &reply)
 	return &reply, err
 }
 
 func (st *storageTester) Put(value []byte) (*replicarpc.PutReply, error) {
 	args := &replicarpc.PutArgs{V: value}
 	var reply replicarpc.PutReply
-	err := st.srv.Call("StarterServer.Put", args, &reply)
+	err := st.srv.Call("CentralServer.Put", args, &reply)
 	return &reply, err
 }
 
