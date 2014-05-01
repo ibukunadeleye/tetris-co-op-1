@@ -1,5 +1,7 @@
 package centralrpc
 
+import "rpc/replicarpc"
+
 //contains the RPC methods that can be called on the centralserver
 
 type StatusCode int
@@ -21,6 +23,9 @@ type RegisterGSReply struct {
 
 type RemoteCentralServer interface {
 	RegisterGameServer(*RegisterGSArgs, *RegisterGSReply) error
+	RegisterReplica(*replicarpc.RegisterArgs, *replicarpc.RegisterReply) error
+	Get(*replicarpc.GetArgs, *replicarpc.GetReply) error
+	Put(*replicarpc.PutArgs, *replicarpc.PutReply) error
 }
 
 type CentralServer struct {
