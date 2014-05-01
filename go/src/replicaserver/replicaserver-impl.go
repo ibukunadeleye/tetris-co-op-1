@@ -34,6 +34,7 @@ type replicaServer struct {
 	testNodeDies_BC bool
 	testNodeDies_AC bool
 	FailureNode     int
+	nextFail		int
 }
 
 // NewReplicaServer creates and starts a new ReplicaServer.
@@ -62,6 +63,7 @@ func NewReplicaServer(masterServerHostPort string, port, numNodes int, fail bool
 		outChan:         make(chan []byte),
 		testNodeDies_BC: fail,
 		FailureNode:     2,
+		nextFail : 0,
 	}
 
 	//start rpc for the replica
@@ -194,10 +196,11 @@ func (rs *replicaServer) Accept(args *replicarpc.AcceptArgs, reply *replicarpc.R
 
 func (rs *replicaServer) Commit(args *replicarpc.CommitVal, reply *replicarpc.Reply) error {
 	fmt.Println("got into commit with value:", args.V)
-
-	if rs.testNodeDies_BC && (rs.FailureNode == rs.ID) {
+	
+	rs.nextFail = (rs.nextFail +1) % 3
+	
+	if (rs.testNodeDies_BC) && (rs.nextFail == 0) {
 		fmt.Println("value will not be committed")
-		rs.testNodeDies_BC = false
 	} else {
 		rs.logMutex.RLock()
 		logLen := len(rs.commitLog)
