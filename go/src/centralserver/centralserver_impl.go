@@ -124,6 +124,9 @@ func NewCentralServer(port string, numGS, numNodes int) (CentralServer, error) {
 	rpc.HandleHTTP()
 	go http.Serve(listener, nil)
 	fmt.Println("Created central server successfully")
+	
+	go newCentralServer.waitReady()
+	
 	return newCentralServer, nil
 }
 
