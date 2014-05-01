@@ -85,6 +85,9 @@ function Start(){
                          $(id).css("background-color", "#3399FF");
                          break;
                      case 2: 
+                         $(id).css("background-color", "#FF6600");
+                         break;
+                     case 3: 
                          $(id).css("background-color", "#7AC861");
                          break;
                      }

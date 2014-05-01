@@ -21,7 +21,7 @@ type Game struct {
 
 type GameServers_Synced struct {
 	//Map: keys are integer IDs of the game server
-	//and the values are the hostport of the game sever
+	//and the values are the ports of the game sever
 	sync.RWMutex
 	Map map[int]string
 }
@@ -32,8 +32,15 @@ type Players_Synced struct {
 	Map map[string]*websocket.Conn
 }
 
+type CurrGS_Synced struct {
+	sync.RWMutex
+	ID  int //id of the active game server
+	Num int //number of clients the game server has been assigned to
+}
+
 type centralServer struct {
 	Port        string
+	CurrGS      *CurrGS_Synced
 	GameServers *GameServers_Synced
 	Players     *Players_Synced
 	//	Games       []*Game
@@ -62,29 +69,94 @@ var upgrader = websocket.Upgrader{
 
 func (cs *centralServer) Handler(w http.ResponseWriter, r *http.Request) {
 	id := r.RemoteAddr
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		fmt.Println("Error: ", err)
-		return
-	}
-
-	//only supporting 2 players for now
 	cs.Players.Lock()
-	cs.Players.Map[id] = conn
-	fmt.Println("Registered player from ", id)
+	conn, ok := cs.Players.Map[id]
 	cs.Players.Unlock()
-
-	//wait for at least one game server to register
-	cs.GameServers.Lock()
-	for len(cs.GameServers.Map) == 0 {
-		cs.GameServers.Unlock()
-		time.Sleep(time.Second)
+	if ok {
+		fmt.Println("Player from ", id, " re-registered")
+		//if client is already registered and is requesting the central server
+		//that means that a gameserver died, so grab a new game server port
+		// and send it to the client
+		if cs.CurrGS.Num == 0 {
+			fmt.Println("CS Error: CurrGS shouldn't be empty")
+			return
+		}
 		cs.GameServers.Lock()
+		cs.CurrGS.Lock()
+		var newPort string
+
+		//check to see if this is the first or second player re-registering
+
+		if cs.CurrGS.Num == 2 { //first player re-registering
+			delete(cs.GameServers.Map, cs.CurrGS.ID)
+			if len(cs.GameServers.Map) == 0 {
+				fmt.Println("CS: No more game servers available")
+				return
+			}
+
+			for gs_id, port := range cs.GameServers.Map {
+				cs.CurrGS.ID = gs_id
+				cs.CurrGS.Num = 1
+				newPort = port
+				break
+			}
+		} else { //cs.CurrGS.Num == 1 (second player re-registering)
+			cs.CurrGS.Num = 2
+			newPort = cs.GameServers.Map[cs.CurrGS.ID]
+		}
+
+		cs.CurrGS.Unlock()
+		cs.GameServers.Unlock()
+		conn.WriteMessage(1, []byte(newPort))
+		return
+	} else {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			fmt.Println("Error: ", err)
+			return
+		}
+
+		//only supporting 2 players for now
+		cs.Players.Lock()
+		cs.Players.Map[id] = conn
+		fmt.Println("Registered player from ", id)
+		cs.Players.Unlock()
+
+		//wait for at least one game server to register
+		cs.GameServers.Lock()
+		for len(cs.GameServers.Map) == 0 {
+			cs.GameServers.Unlock()
+			time.Sleep(time.Second)
+			cs.GameServers.Lock()
+		}
+
+		//check to see if this is the first player to register ever
+		//if so, send him to gameserver #1
+		var gsPort string
+		cs.Players.Lock()
+		if len(cs.Players.Map) == 0 { //very first player
+			fmt.Println("Registered Player 1 from ", id, " for the first time")
+			gsPort = cs.GameServers.Map[1]
+			cs.CurrGS.Lock()
+			cs.CurrGS.ID = 1
+			cs.CurrGS.ID = 1
+			cs.CurrGS.Unlock()
+		} else {
+			cs.CurrGS.Lock()
+			if cs.CurrGS.Num == 0 {
+				fmt.Println("CS Error: CurrGS should be initialized already")
+				return
+			}
+
+			fmt.Println("Registered Player 2 from ", id, " for the first time")
+			cs.CurrGS.Num = 2
+			gsPort = cs.GameServers.Map[cs.CurrGS.ID]
+			cs.CurrGS.Unlock()
+		}
+		cs.Players.Unlock()
+		cs.GameServers.Unlock()
+		conn.WriteMessage(1, []byte(gsPort))
 	}
-	gs := cs.GameServers.Map[1]
-	cs.GameServers.Unlock()
-	conn.WriteMessage(1, []byte(gs))
-	fmt.Println("http handler exited")
 	return
 }
 
@@ -95,6 +167,7 @@ func NewCentralServer(port string, numGS, numNodes int) (CentralServer, error) {
 
 	newCentralServer := &centralServer{
 		Port:            port,
+		CurrGS:          &CurrGS_Synced{ID: -1, Num: 0},
 		GameServers:     &GameServers_Synced{Map: make(map[int]string)},
 		Players:         &Players_Synced{Map: make(map[string]*websocket.Conn)},
 		TotalGS:         numGS,
@@ -124,9 +197,9 @@ func NewCentralServer(port string, numGS, numNodes int) (CentralServer, error) {
 	rpc.HandleHTTP()
 	go http.Serve(listener, nil)
 	fmt.Println("Created central server successfully")
-	
+
 	go newCentralServer.waitReady()
-	
+
 	return newCentralServer, nil
 }
 

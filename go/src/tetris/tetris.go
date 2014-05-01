@@ -86,13 +86,15 @@ func (b *Board) MoveDown(i int) ([]Update, bool) {
 	var curr *Coord
 	var otherCurr Coord
 	var newCoord Coord
-
+	var color int
 	if i == 1 {
+		color = 1
 		p = *b.CurrPiece1
 		newCoord = b.Init1
 		curr = b.CurrPiece1.Pos
 		otherCurr = *b.CurrPiece2.Pos
 	} else {
+		color = 2
 		p = *b.CurrPiece2
 		newCoord = b.Init2
 		curr = b.CurrPiece2.Pos
@@ -119,7 +121,7 @@ func (b *Board) MoveDown(i int) ([]Update, bool) {
 		b.Landed[curr.Row][curr.Col] = p.ID
 		landUpdate := Update{
 			Pos:   Coord{Row: curr.Row, Col: curr.Col},
-			Value: 2}
+			Value: 3}
 
 		fmt.Println("Game Over")
 		return []Update{landUpdate}, false
@@ -159,18 +161,18 @@ func (b *Board) MoveDown(i int) ([]Update, bool) {
 		//generate new piece
 		newUpdate := Update{
 			Pos:   newCoord,
-			Value: 1}
+			Value: color}
 
 		landUpdate := Update{
 			Pos:   Coord{Row: landedRow, Col: landedCol},
-			Value: 2}
+			Value: 3}
 
 		return []Update{remUpdate, landUpdate, newUpdate}, true
 
 	} else {
 		fillUpdate := Update{
 			Pos:   Coord{Row: curr.Row, Col: curr.Col},
-			Value: 1}
+			Value: color}
 
 		return []Update{remUpdate, fillUpdate}, true
 	}
@@ -179,11 +181,14 @@ func (b *Board) MoveDown(i int) ([]Update, bool) {
 func (b *Board) MoveLeft(i int) []Update {
 	var curr *Coord
 	var otherCurr Coord
+	var color int
 
 	if i == 1 {
+		color = 1
 		curr = b.CurrPiece1.Pos
 		otherCurr = *b.CurrPiece2.Pos
 	} else {
+		color = 2
 		curr = b.CurrPiece2.Pos
 		otherCurr = *b.CurrPiece1.Pos
 	}
