@@ -33,7 +33,7 @@ type Players_Synced struct {
 }
 
 type centralServer struct {
-	HostPort    string
+	Port        string
 	GameServers *GameServers_Synced
 	Players     *Players_Synced
 	//	Games       []*Game
@@ -89,12 +89,12 @@ func (cs *centralServer) Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 //numGS is the number of game servers the central server should expect
-func NewCentralServer(hostport string, numGS, numNodes int) (CentralServer, error) {
+func NewCentralServer(port string, numGS, numNodes int) (CentralServer, error) {
 
-	fmt.Println("Creating central server at ", hostport)
+	fmt.Println("Creating central server at localhost:", port)
 
 	newCentralServer := &centralServer{
-		HostPort:        hostport,
+		Port:            port,
 		GameServers:     &GameServers_Synced{Map: make(map[int]string)},
 		Players:         &Players_Synced{Map: make(map[string]*websocket.Conn)},
 		TotalGS:         numGS,
@@ -106,10 +106,10 @@ func NewCentralServer(hostport string, numGS, numNodes int) (CentralServer, erro
 		readyChan:       make(chan int)}
 
 	http.HandleFunc("/", newCentralServer.Handler)
-	go http.ListenAndServe(hostport, nil)
+	go http.ListenAndServe(":"+port, nil)
 
 	//register new central server to receive RPCs
-	listener, err := net.Listen("tcp", hostport)
+	listener, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		fmt.Println("CS: ", err)
 		return nil, err
@@ -142,7 +142,7 @@ func (cs *centralServer) RegisterGameServer(args *centralrpc.RegisterGSArgs, rep
 			return nil
 		}
 	} else {
-		cs.GameServers.Map[args.ID] = args.HostPort
+		cs.GameServers.Map[args.ID] = args.Port
 
 		if len(cs.GameServers.Map) == cs.TotalGS {
 			cs.GameServers.Unlock()

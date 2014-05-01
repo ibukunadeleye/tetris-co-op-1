@@ -13,8 +13,8 @@ const (
 )
 
 type RegisterGSArgs struct {
-	HostPort string
-	ID       int
+	Port string
+	ID   int
 }
 
 type RegisterGSReply struct {

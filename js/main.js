@@ -25,7 +25,7 @@ function Start(){
   {
      console.log("WebSocket is supported by your Browser!");
      // connect to central server to obtain address for game server
-     var central_ws = new WebSocket("ws://localhost:8081/");
+     var central_ws = new WebSocket("ws://unix5.andrew.cmu.edu:8085/");
      
      central_ws.onopen = function() {
          console.log("connection to central server established");
@@ -34,9 +34,9 @@ function Start(){
      central_ws.onmessage = function(event) {
          //central server will send a hostport for a game server upon
          //connection
-         var gs_hostport = event.data;
-         console.log("Being redirected to game server at " + gs_hostport)
-         var game_ws = new WebSocket("ws://" + gs_hostport + "/");
+         var gs_port = event.data;
+         console.log("Being redirected to game server at port " + gs_port)
+         var game_ws = new WebSocket("ws://unix5.andrew.cmu.edu:" + gs_port + "/");
          
          game_ws.onopen = function() {
              console.log("connected to game server")
