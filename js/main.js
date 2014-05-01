@@ -24,67 +24,82 @@ function Start(){
   if ("WebSocket" in window)
   {
      console.log("WebSocket is supported by your Browser!");
-     // Let us open a web socket
-     var ws = new WebSocket("ws://localhost:8080/");
+     // connect to central server to obtain address for game server
+     var central_ws = new WebSocket("ws://localhost:8081/");
+     
+     central_ws.onopen = function() {
+         console.log("connection to central server established");
+     }
+     
+     central_ws.onmessage = function(event) {
+         //central server will send a hostport for a game server upon
+         //connection
+         var gs_hostport = event.data;
+         console.log("Being redirected to game server at " + gs_hostport)
+         var game_ws = new WebSocket("ws://" + gs_hostport + "/");
+         
+         game_ws.onopen = function() {
+             console.log("connected to game server")
+             $('#start').hide();
+             MakeTable(6,6);
+             $('body').on("keydown", function (event) {
+                     switch (event.which) {
+                     case 37: //left arrow
+                         console.log("pressed left");
+                         game_ws.send("Left");
+                         break;
+                     case 39: //right arrow
+                         console.log("pressed right");
+                         game_ws.send("Right");
+                         break;
+                     case 40: //down arrow
+                         game_ws.send("Down");
+                         break;
+                     case 80: //p key
+                         game_ws.send("Pause");
+                         break;
+                     }
+                 });
+         }
+         
+         game_ws.onmessage = function (event) { 
+             var received_msg = event.data;
 
-     ws.onopen = function() {
-         $('#start').hide();
-         MakeTable(4,4);
-         $('body').on("keydown", function (event) {
-                 switch (event.which) {
-                 case 37: //left arrow
-                     console.log("pressed left");
-                     ws.send("Left");
-                     break;
-                 case 39: //right arrow
-                     console.log("pressed right");
-                     ws.send("Right");
-                     break;
-                 case 40: //down arrow
-                     ws.send("Down");
-                     break;
-                 case 80: //p key
-                     ws.send("Pause");
-                     break;
+             if (received_msg === "GameOver") {
+                 $('#Table').fadeTo(1,.3);
+                 $('body').off();
+                 $('#dialogue').css("display","block");
+                 $('#dialogue').html('Game Over');
+                 
+             } else {
+                 var updates = jQuery.parseJSON(received_msg);
+                 
+                 for (var i = 0; i < updates.length; i++){
+                     var id = PosToId(updates[i].Pos);
+                     var val = updates[i].Value;
+                     switch (val) {
+                     case 0: 
+                         $(id).css("background-color", "white");
+                         break;
+                     case 1: 
+                         $(id).css("background-color", "#3399FF");
+                         break;
+                     case 2: 
+                         $(id).css("background-color", "#7AC861");
+                         break;
+                     }
                  }
-             });
+             }
+         }
+
+         game_ws.onclose = function() {
+             console.log("Connection to game server closed")
+         }
      }
-
-     ws.onmessage = function (event) { 
-        var received_msg = event.data;
-
-        if (received_msg === "GameOver") {
-            $('#Table').fadeTo(1,.3);
-            $('body').off();
-            $('#dialogue').css("display","block");
-            $('#dialogue').html('Game Over');
-            
-        } else {
-            var updates = jQuery.parseJSON(received_msg);
-
-            for (var i = 0; i < updates.length; i++){
-                var id = PosToId(updates[i].Pos);
-                var val = updates[i].Value;
-                switch (val) {
-                case 0: 
-                    $(id).css("background-color", "white");
-                    break;
-                case 1: 
-                    $(id).css("background-color", "#3399FF");
-                    break;
-                case 2: 
-                    $(id).css("background-color", "#7AC861");
-                break;
-                }
-            }
-        }
+     
+     central_ws.onclose = function() {
+         console.log("Connection to central server closed")
      }
-
-     ws.onclose = function()
-     { 
-        // websocket is closed.
-        console.log("Connection is closed..."); 
-     };
   }
   else
   {
