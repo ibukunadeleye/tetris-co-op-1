@@ -26,12 +26,8 @@ func main() {
 	}
 	
 	var err error
-	// Create and start the StorageServer.
-	if *masterHostPort == ""{
-		_,err = replicaserver.NewStarterServer(*masterHostPort,*port,*numNodes)
-	}else{
-		_,err = replicaserver.NewReplicaServer(*masterHostPort,*port,*numNodes)
-	}
+	// Create and start the ReplicaServer.
+	_,err = replicaserver.NewReplicaServer(*masterHostPort,*port,*numNodes)
 	if err != nil {
 		log.Fatalln("Failed to create storage server:", err)
 	}
